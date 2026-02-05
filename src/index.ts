@@ -2,6 +2,7 @@
 import { Command } from "commander";
 import { profilesCommand } from "./cli/profiles";
 import { bookmarksCommand } from "./cli/bookmarks";
+import { groupsCommand } from "./cli/groups";
 
 const program = new Command();
 
@@ -12,5 +13,6 @@ program
 
 program.addCommand(profilesCommand);
 program.addCommand(bookmarksCommand);
+program.addCommand(groupsCommand);
 
 program.parse();
