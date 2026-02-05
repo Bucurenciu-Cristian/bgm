@@ -1,0 +1,20 @@
+{
+  "name": "bgm",
+  "version": "0.1.0",
+  "description": "Brave Groups Manager - CLI tool to manage Brave browser tab groups and bookmarks",
+  "type": "module",
+  "bin": {
+    "bgm": "./src/index.ts"
+  },
+  "scripts": {
+    "dev": "bun run src/index.ts",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "dependencies": {
+    "commander": "^14.0.3"
+  }
+}
