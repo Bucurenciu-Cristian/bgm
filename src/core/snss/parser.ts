@@ -52,6 +52,22 @@ function readString16(view: DataView, offset: number): { value: string; bytesRea
   };
 }
 
+/**
+ * Read a length-prefixed UTF-8/ASCII string (with 4-byte alignment)
+ */
+function readString8(view: DataView, offset: number): { value: string; bytesRead: number } {
+  const length = readU32(view, offset);
+  const bytes = new Uint8Array(view.buffer, view.byteOffset + offset + 4, length);
+  const decoder = new TextDecoder("utf-8");
+  // Align to 4 bytes (Chromium pickle format)
+  const totalBytes = 4 + length;
+  const alignedBytes = Math.ceil((offset + totalBytes) / 4) * 4 - offset;
+  return {
+    value: decoder.decode(bytes),
+    bytesRead: alignedBytes,
+  };
+}
+
 // Command type constants
 const CMD_SET_TAB_WINDOW = 0;
 const CMD_SET_TAB_INDEX_IN_WINDOW = 2;
@@ -97,8 +113,9 @@ function parseCommandBody(id: number, body: Uint8Array): Record<string, unknown>
 
       case CMD_SET_TAB_GROUP: {
         if (body.length < 24) return undefined;
+        // Format: tab_id(4) + padding(4) + token_high(8) + token_low(8)
         return {
-          tabId: readU32(view, 4),
+          tabId: readU32(view, 0),
           tokenHigh: readU64(view, 8),
           tokenLow: readU64(view, 16),
         };
@@ -140,14 +157,14 @@ function parseCommandBody(id: number, body: Uint8Array): Record<string, unknown>
 
         let offset = 12;
 
-        // Try to read URL
+        // Try to read URL (ASCII/UTF-8, NOT UTF-16)
         if (offset + 4 > body.length) {
           return { tabId, navigationIndex, url: "", title: "" };
         }
-        const urlResult = readString16(view, offset);
+        const urlResult = readString8(view, offset);
         offset += urlResult.bytesRead;
 
-        // Try to read title
+        // Try to read title (UTF-16LE)
         if (offset + 4 > body.length) {
           return { tabId, navigationIndex, url: urlResult.value, title: "" };
         }
