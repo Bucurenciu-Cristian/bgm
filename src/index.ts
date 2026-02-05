@@ -3,6 +3,7 @@ import { Command } from "commander";
 import { profilesCommand } from "./cli/profiles";
 import { bookmarksCommand } from "./cli/bookmarks";
 import { groupsCommand } from "./cli/groups";
+import { parkCommand, unparkCommand } from "./cli/park";
 
 const program = new Command();
 
@@ -14,5 +15,7 @@ program
 program.addCommand(profilesCommand);
 program.addCommand(bookmarksCommand);
 program.addCommand(groupsCommand);
+program.addCommand(parkCommand);
+program.addCommand(unparkCommand);
 
 program.parse();
