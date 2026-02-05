@@ -183,12 +183,12 @@ bgm/
 
 ## Implementation Phases
 
-### Phase 1 - Foundation (MVP)
+### Phase 1 - Foundation (MVP) ✅
 
-- [ ] Profile discovery and listing
-- [ ] Bookmarks read/write (JSON)
-- [ ] Basic CLI skeleton with commander
-- [ ] Brave process detection
+- [x] Profile discovery and listing
+- [x] Bookmarks read (JSON)
+- [x] Basic CLI skeleton with commander
+- [x] Brave process detection
 
 ### Phase 2 - Tab Groups
 
