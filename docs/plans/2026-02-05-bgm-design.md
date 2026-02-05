@@ -190,11 +190,11 @@ bgm/
 - [x] Basic CLI skeleton with commander
 - [x] Brave process detection
 
-### Phase 2 - Tab Groups
+### Phase 2 - Tab Groups ✅
 
-- [ ] SNSS session file parsing
-- [ ] Tab group listing and reading
-- [ ] Tab group deletion
+- [x] SNSS session file parsing (manual parser)
+- [x] Tab group listing and reading
+- [x] Tab group metadata (name, color, tabs)
 
 ### Phase 3 - The Key Feature
 
