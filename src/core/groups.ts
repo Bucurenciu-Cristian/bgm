@@ -1,3 +1,4 @@
+import { join } from "path";
 import type { Profile, TabGroup, Tab, TabGroupColor } from "../types";
 import { getLatestSessionFile } from "./sessions";
 import { parseSessionFile, CommandType } from "./snss/parser";
@@ -167,4 +168,131 @@ export async function getTabGroupByName(
   const groups = await getTabGroups(profile);
   const lowerName = name.toLowerCase();
   return groups.find((g) => g.name.toLowerCase() === lowerName);
+}
+
+// ============================================================================
+// Closed Remote Groups (from Preferences)
+// ============================================================================
+
+export interface ClosedRemoteGroup {
+  /** The sync cache GUID (base64 encoded) */
+  cacheGuid: string;
+  /** Individual group IDs within this sync cache */
+  groupIds: string[];
+}
+
+export interface RemoteGroupsSummary {
+  /** Total count of closed remote group IDs */
+  totalCount: number;
+  /** Groups organized by sync cache */
+  bySyncCache: ClosedRemoteGroup[];
+}
+
+/**
+ * Read Preferences file for a profile
+ */
+async function readPreferences(profile: Profile): Promise<Record<string, unknown>> {
+  const prefsPath = join(profile.path, "Preferences");
+  const file = Bun.file(prefsPath);
+
+  if (!(await file.exists())) {
+    return {};
+  }
+
+  try {
+    return await file.json();
+  } catch {
+    return {};
+  }
+}
+
+/**
+ * Write Preferences file for a profile
+ */
+async function writePreferences(
+  profile: Profile,
+  prefs: Record<string, unknown>
+): Promise<void> {
+  const prefsPath = join(profile.path, "Preferences");
+  await Bun.write(prefsPath, JSON.stringify(prefs, null, 3));
+}
+
+/**
+ * Get closed remote (synced) group IDs from Preferences
+ * These are groups that synced from other devices but were closed locally
+ */
+export async function getClosedRemoteGroups(
+  profile: Profile
+): Promise<RemoteGroupsSummary> {
+  const prefs = await readPreferences(profile);
+  const savedTabGroups = prefs.saved_tab_groups as Record<string, unknown> | undefined;
+
+  if (!savedTabGroups) {
+    return { totalCount: 0, bySyncCache: [] };
+  }
+
+  const closedRemoteGroupIds = savedTabGroups.closed_remote_group_ids as
+    | Record<string, Record<string, null>>
+    | undefined;
+
+  if (!closedRemoteGroupIds) {
+    return { totalCount: 0, bySyncCache: [] };
+  }
+
+  const bySyncCache: ClosedRemoteGroup[] = [];
+  let totalCount = 0;
+
+  for (const [cacheGuid, groups] of Object.entries(closedRemoteGroupIds)) {
+    const groupIds = Object.keys(groups);
+    totalCount += groupIds.length;
+    bySyncCache.push({ cacheGuid, groupIds });
+  }
+
+  return { totalCount, bySyncCache };
+}
+
+/**
+ * Clear all closed remote group IDs from Preferences
+ * This effectively "forgets" that these synced groups were closed
+ */
+export async function clearClosedRemoteGroups(profile: Profile): Promise<number> {
+  const prefs = await readPreferences(profile);
+  const savedTabGroups = prefs.saved_tab_groups as Record<string, unknown> | undefined;
+
+  if (!savedTabGroups || !savedTabGroups.closed_remote_group_ids) {
+    return 0;
+  }
+
+  const closedRemoteGroupIds = savedTabGroups.closed_remote_group_ids as Record<
+    string,
+    Record<string, null>
+  >;
+
+  // Count before clearing
+  let count = 0;
+  for (const groups of Object.values(closedRemoteGroupIds)) {
+    count += Object.keys(groups).length;
+  }
+
+  // Clear the closed_remote_group_ids
+  savedTabGroups.closed_remote_group_ids = {};
+
+  await writePreferences(profile, prefs);
+
+  return count;
+}
+
+/**
+ * Get a combined summary of all tab groups (session + closed remote)
+ */
+export async function getAllTabGroupsSummary(profile: Profile): Promise<{
+  sessionGroups: TabGroup[];
+  closedRemoteGroups: RemoteGroupsSummary;
+}> {
+  const [sessionGroups, closedRemoteGroups] = await Promise.all([
+    getTabGroups(profile),
+    getClosedRemoteGroups(profile),
+  ]);
+
+  return { sessionGroups, closedRemoteGroups };
 }
