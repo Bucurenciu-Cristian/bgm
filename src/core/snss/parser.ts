@@ -44,6 +44,7 @@ function readU64(view: DataView, offset: number): bigint {
 function readString16(view: DataView, offset: number): { value: string; bytesRead: number } {
   const length = readU32(view, offset);
   const bytes = new Uint8Array(view.buffer, view.byteOffset + offset + 4, length * 2);
+  // @ts-ignore - utf-16le is a valid encoding
   const decoder = new TextDecoder("utf-16le");
   return {
     value: decoder.decode(bytes),

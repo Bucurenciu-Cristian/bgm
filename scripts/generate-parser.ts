@@ -19,7 +19,7 @@ const schema = parseYaml(schemaContent);
 const result = await KaitaiStructCompiler.compile("javascript", schema, null, false);
 
 // Get the generated JavaScript
-const jsFileName = Object.keys(result)[0];
+const jsFileName = Object.keys(result)[0]!;
 const jsContent = result[jsFileName];
 
 // Write the output
