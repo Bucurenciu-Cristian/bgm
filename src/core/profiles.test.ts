@@ -26,7 +26,7 @@ describe("getProfiles", () => {
 describe("getProfileByName", () => {
   test("finds profile by display name", async () => {
     const profiles = await getProfiles();
-    const firstName = profiles[0].name;
+    const firstName = profiles[0]!.name;
     const found = await getProfileByName(firstName);
     expect(found).toBeDefined();
     expect(found?.name).toBe(firstName);
@@ -39,7 +39,7 @@ describe("getProfileByName", () => {
 
   test("is case-insensitive", async () => {
     const profiles = await getProfiles();
-    const firstName = profiles[0].name;
+    const firstName = profiles[0]!.name;
     const found = await getProfileByName(firstName.toLowerCase());
     expect(found).toBeDefined();
   });

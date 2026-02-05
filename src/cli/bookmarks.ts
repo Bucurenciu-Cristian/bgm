@@ -20,7 +20,10 @@ async function getTargetProfile(profileName?: string): Promise<Profile> {
 
   // Default to first profile
   const profiles = await getProfiles();
-  return profiles[0];
+  if (profiles.length === 0) {
+    throw new Error("No Brave profiles found");
+  }
+  return profiles[0]!;
 }
 
 export const bookmarksCommand = new Command("bookmarks")
