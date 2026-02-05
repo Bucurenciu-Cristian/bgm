@@ -1,4 +1,5 @@
 import { join } from "path";
+import { randomUUID } from "crypto";
 import type {
   Profile,
   BookmarksFile,
@@ -161,4 +162,151 @@ export function getFolderTree(
  */
 export function listFolders(folder: BookmarkFolder): BookmarkFolder[] {
   return folder.children.filter((c): c is BookmarkFolder => c.type === "folder");
+}
+
+// ============================================================================
+// Write Operations
+// ============================================================================
+
+/**
+ * Generate a unique ID for bookmarks (simple incrementing counter simulation)
+ */
+let nextId = Date.now();
+function generateId(): string {
+  return String(nextId++);
+}
+
+/**
+ * Create a new bookmark folder
+ */
+export function createBookmarkFolder(name: string): BookmarkFolder {
+  const now = Date.now() * 1000; // Chrome uses microseconds
+
+  return {
+    type: "folder",
+    id: generateId(),
+    guid: randomUUID(),
+    name,
+    dateAdded: now,
+    dateModified: now,
+    children: [],
+  };
+}
+
+/**
+ * Create a new bookmark (URL)
+ */
+export function addBookmark(name: string, url: string): Bookmark {
+  const now = Date.now() * 1000;
+
+  return {
+    type: "url",
+    id: generateId(),
+    guid: randomUUID(),
+    name,
+    url,
+    dateAdded: now,
+    dateLastUsed: 0,
+  };
+}
+
+/**
+ * Serialize bookmarks to Chrome/Brave JSON format
+ */
+export function serializeBookmarks(bookmarks: BookmarksFile): string {
+  function serializeNode(node: BookmarkNode): Record<string, unknown> {
+    if (node.type === "folder") {
+      return {
+        type: "folder",
+        id: node.id,
+        guid: node.guid,
+        name: node.name,
+        date_added: String(node.dateAdded),
+        date_modified: String(node.dateModified),
+        children: node.children.map(serializeNode),
+      };
+    }
+
+    return {
+      type: "url",
+      id: node.id,
+      guid: node.guid,
+      name: node.name,
+      url: node.url,
+      date_added: String(node.dateAdded),
+      date_last_used: String(node.dateLastUsed),
+    };
+  }
+
+  const output = {
+    checksum: bookmarks.checksum, // Keep original checksum (Brave recalculates)
+    roots: {
+      bookmark_bar: serializeNode(bookmarks.roots.bookmark_bar),
+      other: serializeNode(bookmarks.roots.other),
+      synced: serializeNode(bookmarks.roots.synced),
+    },
+    version: bookmarks.version || 1,
+  };
+
+  return JSON.stringify(output, null, 3); // Chrome uses 3-space indent
+}
+
+/**
+ * Write bookmarks file for a profile
+ */
+export async function writeBookmarks(
+  profile: Profile,
+  bookmarks: BookmarksFile
+): Promise<void> {
+  const bookmarksPath = join(profile.path, "Bookmarks");
+  const content = serializeBookmarks(bookmarks);
+  await Bun.write(bookmarksPath, content);
+}
+
+/**
+ * Add a folder to the bookmark bar
+ */
+export function addFolderToBookmarkBar(
+  bookmarks: BookmarksFile,
+  folder: BookmarkFolder
+): BookmarksFile {
+  return {
+    ...bookmarks,
+    roots: {
+      ...bookmarks.roots,
+      bookmark_bar: {
+        ...bookmarks.roots.bookmark_bar,
+        children: [...bookmarks.roots.bookmark_bar.children, folder],
+      },
+    },
+  };
+}
+
+/**
+ * Find or create a folder by path, creating intermediate folders as needed
+ */
+export function ensureFolderPath(
+  bookmarks: BookmarksFile,
+  path: string
+): { bookmarks: BookmarksFile; folder: BookmarkFolder } {
+  const parts = path.split("/").filter(Boolean);
+  let current = bookmarks.roots.bookmark_bar;
+
+  for (const part of parts) {
+    let found = current.children.find(
+      (c): c is BookmarkFolder =>
+        c.type === "folder" && c.name.toLowerCase() === part.toLowerCase()
+    );
+
+    if (!found) {
+      // Create the folder
+      found = createBookmarkFolder(part);
+      current.children.push(found);
+      current.dateModified = Date.now() * 1000;
+    }
+
+    current = found;
+  }
+
+  return { bookmarks, folder: current };
 }
