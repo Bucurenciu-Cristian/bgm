@@ -82,3 +82,41 @@ export interface LocalState {
 export interface BgmConfig {
   defaultProfile?: string;
 }
+
+/**
+ * Tab group color options
+ */
+export type TabGroupColor =
+  | "grey"
+  | "blue"
+  | "red"
+  | "yellow"
+  | "green"
+  | "pink"
+  | "purple"
+  | "cyan"
+  | "orange";
+
+/**
+ * A tab within a group
+ */
+export interface Tab {
+  id: number;
+  url: string;
+  title: string;
+  index: number;
+}
+
+/**
+ * A tab group from the session
+ */
+export interface TabGroup {
+  /** Unique token for the group (high + low combined) */
+  token: string;
+  /** Display name */
+  name: string;
+  /** Group color */
+  color: TabGroupColor;
+  /** Tabs in this group */
+  tabs: Tab[];
+}
