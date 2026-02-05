@@ -196,11 +196,11 @@ bgm/
 - [x] Tab group listing and reading
 - [x] Tab group metadata (name, color, tabs)
 
-### Phase 3 - The Key Feature
+### Phase 3 - The Key Feature ✅
 
-- [ ] `bgm park` - Tab group → Bookmark folder
-- [ ] `bgm unpark` - Bookmark folder → Tab group
-- [ ] Backup system
+- [x] `bgm park` - Tab group → Bookmark folder
+- [x] `bgm unpark` - Bookmark folder → Tab group
+- [x] Backup system
 
 ### Phase 4 - Polish
 
