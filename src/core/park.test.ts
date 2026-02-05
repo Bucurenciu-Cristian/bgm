@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { parkTabGroup, ParkOptions } from "./park";
+import { parkTabGroup } from "./park";
+import type { ParkOptions } from "./park";
 import { getProfiles } from "./profiles";
 import { getTabGroups } from "./groups";
 

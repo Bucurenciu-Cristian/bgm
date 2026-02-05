@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { unparkBookmarkFolder, UnparkOptions } from "./unpark";
+import { unparkBookmarkFolder } from "./unpark";
+import type { UnparkOptions } from "./unpark";
 import { getProfiles } from "./profiles";
 import { readBookmarks } from "./bookmarks";
 
